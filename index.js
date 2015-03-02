@@ -24,7 +24,7 @@ module.exports = function () {
     contentsStream
     .pipe(parse())
     .on('entry', function (entry) {
-      if (entry.props.type !== '0') return
+      if (entry.props.type !== '0' && entry.props.type !== '2') return
 
       // Accumulate the contents and emit a file with a Buffer of the contents.
       //
@@ -37,11 +37,23 @@ module.exports = function () {
       entry.pipe(es.wait(function (err, data) {
         if (err) return this.emit('error', err)
 
+        var mode
+        if (entry.props.mode) {
+          var fileTypeMode = 0100000     // Regular file
+          if (entry.type === 'SymbolicLink') {
+            fileTypeMode = 0120000       // Symlink
+            data = entry.props.linkpath  // Symlink files point to the linkpath
+          }
+          mode = entry.props.mode + fileTypeMode
+        }
+
+if (entry.type === 'SymbolicLink') console.error("about to create symbolic link! " + entry.props.path)
         this.push(new gutil.File({
           contents: new Buffer(data),
           path: path.normalize(path.dirname(file.path) + '/' + entry.props.path),
           base: file.base,
-          cwd: file.cwd
+          cwd: file.cwd,
+          stat: { mode: mode }
         }))
       }.bind(this)))
     }.bind(this))

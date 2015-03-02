@@ -13,7 +13,7 @@ describe('gulp-untar', function () {
       files.push(file)
       callback()
     }, function () {
-      assert.equal(files.length, 2)
+      assert.equal(files.length, 4)
 
       var file1 = _.find(files, {path: 'fixtures/file1.txt', base: './fixtures', cwd: '.'})
       assert.ok(file1, 'No file found named "fixtures/file1.txt"')
@@ -24,6 +24,11 @@ describe('gulp-untar', function () {
       assert.ok(file2, 'No file found named "fixtures/dir1/file2.txt"')
       assert.ok(file2.isBuffer(), 'Expected buffer')
       assert.equal('File 2\n', file2.contents.toString())
+
+      var executable = _.find(files, {path: 'fixtures/executable.sh', base: './fixtures', cwd: '.'})
+      assert.ok(executable, 'No file found named "fixtures/executable.sh"')
+      assert.ok(executable.isBuffer(), 'Expected buffer')
+      assert.strictEqual(executable.stat.mode, 33261)
 
       done()
     })
